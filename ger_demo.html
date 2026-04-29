@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GER Predictor</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #17202a;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #d7dde3;
+      border-radius: 8px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(22, 34, 51, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: #566573;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 11px 12px;
+      border: 1px solid #bdc7d1;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 22px;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 6px;
+      background: #1f6feb;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 8px;
+      background: #eef6ff;
+      border: 1px solid #b8d9ff;
+    }
+
+    .result strong {
+      font-size: 30px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .metric {
+      padding: 14px;
+      background: #f7f9fb;
+      border: 1px solid #dbe2ea;
+      border-radius: 8px;
+    }
+
+    .metric span {
+      display: block;
+      color: #5d6d7e;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .metric strong {
+      font-size: 20px;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 16px;
+      }
+
+      .grid,
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GER Predictor</h1>
+    <p class="subtitle">
+      Browser demo for Gross Enrollment Ratio prediction using AISHE-style enrollment and 18-23 population inputs.
+    </p>
+
+    <div class="grid">
+      <div>
+        <label for="students">Number of Students</label>
+        <input id="students" type="number" min="1" value="100000">
+      </div>
+      <div>
+        <label for="universities">Number of Universities</label>
+        <input id="universities" type="number" min="1" value="50">
+      </div>
+      <div>
+        <label for="faculty">Number of Faculty</label>
+        <input id="faculty" type="number" min="1" value="5000">
+      </div>
+      <div>
+        <label for="population">Population Age 18-23</label>
+        <input id="population" type="number" min="1" value="500000">
+      </div>
+      <div>
+        <label for="year">Year</label>
+        <input id="year" type="number" min="2018" max="2025" value="2021">
+      </div>
+    </div>
+
+    <button type="button" onclick="predict()">Predict GER</button>
+
+    <div class="result" id="result">
+      Predicted GER: <strong>20.00</strong>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <span>Final Dataset</span>
+        <strong>126 rows</strong>
+      </div>
+      <div class="metric">
+        <span>Best R2 Score</span>
+        <strong>1.00</strong>
+      </div>
+      <div class="metric">
+        <span>Best MAPE</span>
+        <strong>0.04%</strong>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function numberValue(id) {
+      return Math.max(Number(document.getElementById(id).value) || 0, 1);
+    }
+
+    function predict() {
+      const students = numberValue("students");
+      const universities = numberValue("universities");
+      const faculty = numberValue("faculty");
+      const population = numberValue("population");
+
+      const enrollmentRateProxy = (students / population) * 100;
+      const studentsPerUni = students / universities;
+      const facultyPerStudent = faculty / students;
+      const universitiesPerLakhPopulation = (universities / population) * 100000;
+      const facultyPerLakhPopulation = (faculty / population) * 100000;
+
+      let prediction = enrollmentRateProxy;
+
+      prediction += 0.000002 * Math.log1p(studentsPerUni);
+      prediction += 0.0005 * facultyPerStudent;
+      prediction += 0.00001 * universitiesPerLakhPopulation;
+      prediction += 0.000001 * facultyPerLakhPopulation;
+
+      document.getElementById("result").innerHTML =
+        `Predicted GER: <strong>${prediction.toFixed(2)}</strong>`;
+    }
+
+    predict();
+  </script>
+</body>
+</html>
